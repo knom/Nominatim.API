@@ -1,0 +1,72 @@
+# f1ana Nominatim.API
+This project is a **C# library** for utilizing geocoding (forward and reverse), in addition to address lookups, with the **OpenStreetMap Nominatim REST API**. 
+It targets .NET Standard 2.0 / .NET 6.0.
+
+## Background on OpenStreetMap (OSM) Nominatim REST API
+* [Test UI](https://nominatim.openstreetmap.org/)
+* [Usage Policy](https://operations.osmfoundation.org/policies/nominatim/)
+* [REST API Docs](https://nominatim.org/release-docs/develop/api/Overview/)
+
+## Usage of this library
+### Installation
+The library is distributed [as a NUGET package](https://www.nuget.org/packages/Nominatim.API/).
+To install the package run e.g.
+```
+> dotnet add package Nominatim.API
+```
+
+### Forward Geocoder - aka. Address --> GPS/OSM data
+```
+var fcdr = new ForwardGeocoder();
+
+var osmResults = await fcdr.Geocode(
+    new ForwardGeocodeRequest {
+        // an adress search string, street, city, country, ...
+        queryString = "Rathausplatz 1,Vienna,Austria"
+    }
+);
+
+foreach (var place in osmResults)
+{
+    Console.WriteLine($"{place.DisplayName} - (Lat: {place.Latitude}, Lon: {place.Longitude})");
+}
+```
+
+### Reverse Geocoder - aka. GPS --> OSM/Address data
+```
+var rcdr = new ReverseGeocoder();
+
+var osmPlace = await rcdr.ReverseGeocode(new ReverseGeocodeRequest
+{
+    Longitude = 16.3565429,
+    Latitude = 48.2109509
+});
+
+Console.WriteLine($"{osmPlace.DisplayName} - City: {osmPlace.Address.City}, Street: {osmPlace.Address.Road}");
+```
+
+### Address Lookup - OSMID --> OSM/Address data
+```
+var searcher = new AddressSearcher();
+var osmPlaces = await searcher.Lookup(new AddressSearchRequest
+{
+    // OSMIDs is a list f node (N), way (W) or relation (R) IDs
+    OSMIDs = new List<string>(new[] { "R146656", "W104393803", "N240109189" })
+});
+
+foreach (var place in osmPlaces)
+{
+    Console.WriteLine($"{place.DisplayName} - City: {place.Address.City}, Street: {place.Address.Road}");
+}
+```
+
+### More detailed requests or responses
+The Nominatim API does allow more detailed search requests and more detailed response levels.
+The library does support these APIs as well.
+
+For more details please refer to [API docs of Nominatim API](https://nominatim.org/release-docs/develop/api/Overview/).
+
+And take a look at the ``src\Nominatim.API.Tests\Nominatim.API.Tests.csproj`` project, which has a couple of tests that show more detailed usage.
+
+## License
+This library is distributed under [these license terms](.\LICENSE).
